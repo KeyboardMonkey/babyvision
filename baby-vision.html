@@ -1,0 +1,261 @@
+//23 Nov 2026
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Eyesight Simulator</title>
+    <style>
+        :root {
+            --primary-color: #5D9CAF;
+            --bg-color: #f0f4f8;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        /* The Viewport */
+        .vision-box {
+            width: 100%;
+            height: 400px; /* Fixed height */
+            background-color: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 25px;
+            border: 4px solid var(--primary-color);
+        }
+
+        .target-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Transition for smooth simulated vision changes */
+            transition: filter 0.5s ease-in-out; 
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            width: 100%; 
+            background: transparent; 
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 25px;
+            width: 25px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            margin-top: -8px; 
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #ddd;
+            border-radius: 5px;
+        }
+
+        /* Stage Indicators (Buttons) */
+        .stages-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columns on mobile */
+            gap: 10px;
+        }
+
+        @media(min-width: 500px) {
+            .stages-grid {
+                grid-template-columns: repeat(6, 1fr); /* 6 columns on desktop */
+            }
+        }
+
+        .stage-btn {
+            background: #e0e0e0;
+            border: none;
+            padding: 10px 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .stage-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Info Box */
+        .info-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-color);
+            text-align: left;
+        }
+
+        .info-box h3 {
+            margin: 0 0 5px 0;
+            color: var(--primary-color);
+        }
+
+        .info-box p {
+            margin: 0;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Baby Eyesight Guide</h1>
+
+        <div class="vision-box">
+            <img 
+                src="https://i.imgur.com/0GSDUl1.png?q=80&w=800&auto=format&fit=crop" 
+                alt="Vision Target" 
+                class="target-image" 
+                id="visionImage"
+            >
+        </div>
+
+        <div class="controls">
+            <input type="range" min="0" max="5" value="0" step="1" id="visionSlider">
+            
+            <div class="stages-grid" id="buttonContainer">
+                <button class="stage-btn active" onclick="setStage(0)">Newborn</button>
+                <button class="stage-btn" onclick="setStage(1)">4 Weeks</button>
+                <button class="stage-btn" onclick="setStage(2)">8 Weeks</button>
+                <button class="stage-btn" onclick="setStage(3)">3 Months</button>
+                <button class="stage-btn" onclick="setStage(4)">6 Months</button>
+                <button class="stage-btn" onclick="setStage(5)">Adult</button>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3 id="stageTitle">Newborn Vision</h3>
+            <p id="stageDesc">Vision is very fuzzy. Babies see mostly in black and white shades and high-contrast shapes. They can only focus 8-10 inches away.</p>
+        </div>
+    </div>
+
+    <script>
+        // Configuration for each stage
+        // We simulate vision using CSS filters: blur (sharpness), grayscale (color), contrast.
+        const stages = [
+            {
+                title: "Newborn",
+                desc: "Vision is extremely blurry. They see a world of grays, whites, and blacks. Focus is limited to 8-12 inches (parent's face distance).",
+                filter: "blur(12px) grayscale(100%) contrast(200%) brightness(0.9)"
+            },
+            {
+                title: "4 Weeks",
+                desc: "Still quite blurry, but they can track moving objects briefly. High contrast objects are easier to see.",
+                filter: "blur(8px) grayscale(90%) contrast(150%)"
+            },
+            {
+                title: "8 Weeks",
+                desc: "Depth perception begins to develop. The blur reduces, and eyes start working together more effectively.",
+                filter: "blur(5px) grayscale(60%) contrast(120%)"
+            },
+            {
+                title: "3 Months",
+                desc: "Color vision improves significantly! They can now track moving objects smoothly and reach for things.",
+                filter: "blur(3px) grayscale(30%) contrast(110%)"
+            },
+            {
+                title: "6 Months",
+                desc: "Clarity and depth perception are nearly adult-like. They can see a full spectrum of colors.",
+                filter: "blur(1px) grayscale(0%) contrast(100%)"
+            },
+            {
+                title: "Adult",
+                desc: "Full 20/20 vision with complete depth perception and color recognition.",
+                filter: "blur(0px) grayscale(0%) contrast(100%)"
+            }
+        ];
+
+        const slider = document.getElementById('visionSlider');
+        const image = document.getElementById('visionImage');
+        const title = document.getElementById('stageTitle');
+        const desc = document.getElementById('stageDesc');
+        const buttons = document.querySelectorAll('.stage-btn');
+
+        // Function to update the view based on index
+        function setStage(index) {
+            const data = stages[index];
+
+            // Update Slider Position
+            slider.value = index;
+
+            // Update Text
+            title.textContent = data.title;
+            desc.textContent = data.desc;
+
+            // Apply CSS Filter to Image
+            image.style.filter = data.filter;
+
+            // Update Button Styles
+            buttons.forEach((btn, i) => {
+                if (i === index) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        // Listen for Slider Changes
+        slider.addEventListener('input', (e) => {
+            setStage(parseInt(e.target.value));
+        });
+
+        // Initialize
+        setStage(0);
+
+    </script>
+</body>
+</html>
